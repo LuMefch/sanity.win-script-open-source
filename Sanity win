@@ -1,105 +1,148 @@
-print("hello, its my first script, this script maybe have some issue, im sorry, if script dont work, try to download visual studio code")
+print("hello, it's my first script, this script may have some issues, I'm sorry. If the script doesn't work, try to download Visual Studio Code.")
 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Robojini/Tuturial_UI_Library/main/UI_Template_1"))()
-local Window = Library.CreateLib("sanity.win (early access)", "RJTheme3")
+local Window = Library.CreateLib("sanity.win v1.1", "RJTheme3")
 
 local Tab = Window:NewTab("Visual")
 local Section = Tab:NewSection("ESP")
 
-Section:NewButton("Esp button", "i know this esp is shit", function()
-    local espActive = true -- Variable to control ESP state
-    while espActive do
-        wait(0.5)
-        for _, childrik in ipairs(workspace:GetDescendants()) do
-            if childrik:FindFirstChild("Humanoid") then
-                if not childrik:FindFirstChild("EspBox") then
-                    if childrik ~= game.Players.LocalPlayer.Character then
-                        local esp = Instance.new("BoxHandleAdornment", childrik)
-                        esp.Adornee = childrik
-                        esp.ZIndex = 0
-                        esp.Size = Vector3.new(4, 5, 1)
-                        esp.Transparency = 0.65
-                        esp.Color3 = Color3.fromRGB(255, 48, 48)
-                        esp.AlwaysOnTop = true
-                        esp.Name = "EspBox"
-                    end
+Section:NewButton("ESP Button", "I know this ESP is not perfect", function()
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local LocalPlayer = Players.LocalPlayer
+
+    -- Хранение ESP объектов для каждого игрока
+    local espBoxes = {}
+
+    -- Функция для создания ESP для игрока
+    local function createESPForPlayer(player)
+        if not espBoxes[player] then
+            local screenGui = Instance.new("ScreenGui")
+            screenGui.Name = player.Name .. "ESP"
+            screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+            local espBox = Instance.new("Frame")
+            espBox.Size = UDim2.new(0, 50, 0, 100)
+            espBox.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+            espBox.BackgroundTransparency = 0.65
+            espBox.Parent = screenGui
+
+            -- Полоска здоровья
+            local healthBar = Instance.new("Frame")
+            healthBar.Size = UDim2.new(0, 5, 1, 0)
+            healthBar.Position = UDim2.new(1, 5, 0, 0)
+            healthBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+            healthBar.BorderSizePixel = 0
+            healthBar.Parent = espBox
+
+            local healthLabel = Instance.new("TextLabel")
+            healthLabel.Size = UDim2.new(1, 0, 0, 20)
+            healthLabel.Position = UDim2.new(0, 0, 1, 5)
+            healthLabel.BackgroundTransparency = 1
+            healthLabel.TextColor3 = Color3.new(1, 1, 1)
+            healthLabel.TextScaled = true
+            healthLabel.Parent = espBox
+
+            -- Аватар игрока
+            local avatarImage = Instance.new("ImageLabel")
+            avatarImage.Size = UDim2.new(0, 30, 0, 30)
+            avatarImage.Position = UDim2.new(0, -35, 0, -35)
+            avatarImage.BackgroundTransparency = 1
+            avatarImage.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=150&height=150&format=png"
+            avatarImage.Parent = screenGui
+
+            espBoxes[player] = { espBox = espBox, healthBar = healthBar, healthLabel = healthLabel, avatarImage = avatarImage }
+        end
+    end
+
+    -- Функция для обновления ESP
+    local function updateESPForPlayer(player)
+        if not player.Character or not player.Character:FindFirstChild("Humanoid") then return end
+
+        local humanoid = player.Character:FindFirstChild("Humanoid")
+        local espData = espBoxes[player]
+
+        -- Обновление здоровья
+        local function updateHealth()
+            if humanoid then
+                local health = humanoid.Health
+                local maxHealth = humanoid.MaxHealth
+                
+                -- Проверяем, чтобы избежать деления на ноль
+                if maxHealth > 0 then
+                    local healthPercentage = health / maxHealth
+                    espData.healthBar.Size = UDim2.new(0, 5, 1 - healthPercentage, 0)
+                    espData.healthBar.Position = UDim2.new(1, 5, healthPercentage, 0)
+                    espData.healthLabel.Text = "Здоровье: " .. math.ceil(health) .. "/" .. maxHealth
+                else
+                    espData.healthLabel.Text = "Здоровье: Н/Д" -- Если максимальное здоровье 0
                 end
             end
         end
-    end
-end)
 
-Section:NewButton("ESP Health", "ButtonInfo", function()
-    local Players = game:GetService("Players")
-
-    local function createHealthDisplay(character)
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            local existingGui = character:FindFirstChild("BillboardGui")
-            if existingGui then
-                existingGui:Destroy()
-            end
-
-            local billboardGui = Instance.new("BillboardGui")
-            billboardGui.Adornee = character:FindFirstChild("Head")
-            billboardGui.Size = UDim2.new(0, 100, 0, 50)
-            billboardGui.StudsOffset = Vector3.new(0, 3, 0)
-            billboardGui.AlwaysOnTop = true
-            
-            local healthLabel = Instance.new("TextLabel")
-            healthLabel.Size = UDim2.new(1, 0, 1, 0)
-            healthLabel.BackgroundTransparency = 1
-            healthLabel.TextColor3 = Color3.new(1, 0, 0)
-            healthLabel.TextScaled = true
-            healthLabel.Parent = billboardGui
-            
-            healthLabel.Text = "Health: " .. math.ceil(humanoid.Health) .. "/" .. humanoid.MaxHealth
-            
-            humanoid.HealthChanged:Connect(function()
-                healthLabel.Text = "Health: " .. math.ceil(humanoid.Health) .. "/" .. humanoid.MaxHealth
-            end)
-
-            billboardGui.Parent = character
-        end
+        -- Подписка на изменение здоровья
+        humanoid.HealthChanged:Connect(updateHealth)
+        updateHealth() -- Инициализация текста здоровья
     end
 
-    local function updateAllDisplays()
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player.Character then
-                createHealthDisplay(player.Character)
+    -- Обновление позиции ESP
+    local function updateESPPositions()
+        for player, espData in pairs(espBoxes) do
+            if player.Character and player.Character:FindFirstChild("Humanoid") then
+                local camera = workspace.CurrentCamera
+                local humanoidRootPart = player.Character:FindFirstChild("HumanoidRootPart")
+                if humanoidRootPart then
+                    local playerPosition = humanoidRootPart.Position
+                    local screenPosition, onScreen = camera:WorldToScreenPoint(playerPosition)
+
+                    if player ~= LocalPlayer then
+                        espData.espBox.Visible = onScreen
+                        if onScreen then
+                            espData.espBox.Position = UDim2.new(0, screenPosition.X - 25, 0, screenPosition.Y - 50)
+                            espData.avatarImage.Position = UDim2.new(0, screenPosition.X - 20, 0, screenPosition.Y - 85)
+                        end
+                    else
+                        espData.espBox.Visible = false -- Скрываем ESP для локального игрока
+                    end
+                else
+                    espData.espBox.Visible = false -- Скрываем ESP, если HumanoidRootPart отсутствует
+                end
+            else
+                espData.espBox.Visible = false -- Скрываем ESP, если игрока нет
             end
         end
     end
 
-    local function onCharacterAdded(player)
-        local character = player.Character or player.CharacterAdded:Wait()
-        createHealthDisplay(character)
-
-        player.CharacterAdded:Connect(function(newCharacter)
-            createHealthDisplay(newCharacter)
-        end)
-    end
-
-    for _, player in ipairs(Players:GetPlayers()) do
-        onCharacterAdded(player)
-    end
-
-    Players.PlayerAdded:Connect(function(player)
-        player.CharacterAdded:Connect(function()
-            onCharacterAdded(player)
-        end)
+    -- Подписка на событие RenderStepped для постоянного обновления
+    RunService.RenderStepped:Connect(function()
+        updateESPPositions()
     end)
 
-    while true do
-        updateAllDisplays()
-        wait(1)
+    -- Подписка на события игроков
+    Players.PlayerAdded:Connect(function(player)
+        player.CharacterAdded:Connect(function(character)
+            createESPForPlayer(player)
+            updateESPForPlayer(player)
+        end)
+
+        -- Если игрок уже в игре, создаем ESP
+        if player.Character then
+            createESPForPlayer(player)
+            updateESPForPlayer(player)
+        end
+    end)
+
+    -- Инициализация ESP для уже существующих игроков
+    for _, player in ipairs(Players:GetPlayers()) do
+        createESPForPlayer(player)
+        updateESPForPlayer(player)
     end
 end)
 
 local Tab = Window:NewTab("Movement")
 local Section = Tab:NewSection("WalkSpeed")
 
-Section:NewSlider("WalkspeedPlayer", "no info yet", 500, 0, function(s)
+Section:NewSlider("WalkspeedPlayer", "Set your walk speed", 500, 0, function(s)
     local player = game.Players.LocalPlayer
     if player.Character and player.Character:FindFirstChild("Humanoid") then
         player.Character.Humanoid.WalkSpeed = s
@@ -108,17 +151,13 @@ end)
 
 local Section = Tab:NewSection("Teleport")
 
-Section:NewButton("Ctrl+Click=Tp", "what u need here lol?", function()
+Section:NewButton("Ctrl+Click to Teleport", "Use Ctrl + Click to teleport", function()
     local UIS = game:GetService("User InputService")
     local Player = game.Players.LocalPlayer
     local Mouse = Player:GetMouse()
 
-    function GetCharacter()
-        return Player.Character
-    end
-
     function Teleport(pos)
-        local Char = GetCharacter()
+        local Char = Player.Character
         if Char then
             Char:MoveTo(pos)
         end
@@ -133,14 +172,14 @@ end)
 
 local Section = Tab:NewSection("Fly")
 
-Section:NewButton("Fly", ":3", function()
-    loadstring("\108\111\97\100\115\116\114\105\110\103\40\103\97\109\101\58\72\116\116\112\71\101\116\40\40\39\104\116\116\112\115\58\47\47\103\105\115\116\46\103\105\116\104\117\98\117\115\101\114\99\111\110\116\101\110\116\46\99\111\109\47\109\101\111\122\111\110\101\89\84\47\98\102\48\51\55\100\102\102\57\102\48\97\55\48\48\49\55\51\48\52\100\100\100\54\55\102\100\99\100\51\55\48\47\114\97\119\47\101\49\52\101\55\52\102\52\50\53\98\48\54\48\100\102\53\50\51\51\52\51\99\102\51\48\98\55\56\55\48\55\52\101\98\51\99\53\100\50\47\97\114\99\101\117\115\37\50\53\50\48\120\37\50\53\50\48\102\108\121\37\50\53\50\48\50\37\50\53\50\48\111\98\102\108\117\99\97\116\111\114\39\41\44\116\114\117\101\41\41\40\41\10\10")()
+Section:NewButton("Fly", "Fly around", function()
+    --ARCEUS X FLY V2 SCRIPT
+loadstring("\108\111\97\100\115\116\114\105\110\103\40\103\97\109\101\58\72\116\116\112\71\101\116\40\40\39\104\116\116\112\115\58\47\47\103\105\115\116\46\103\105\116\104\117\98\117\115\101\114\99\111\110\116\101\110\116\46\99\111\109\47\109\101\111\122\111\110\101\89\84\47\98\102\48\51\55\100\102\102\57\102\48\97\55\48\48\49\55\51\48\52\100\100\100\54\55\102\100\99\100\51\55\48\47\114\97\119\47\101\49\52\101\55\52\102\52\50\53\98\48\54\48\100\102\53\50\51\51\52\51\99\102\51\48\98\55\56\55\48\55\52\101\98\51\99\53\100\50\47\97\114\99\101\117\115\37\50\53\50\48\120\37\50\53\50\48\102\108\121\37\50\53\50\48\50\37\50\53\50\48\111\98\102\108\117\99\97\116\111\114\39\41\44\116\114\117\101\41\41\40\41\10\10")()
 end)
-
 local Tab = Window:NewTab("RageBot")
 local Section = Tab:NewSection("Misc")
 
-Section:NewButton("AntiAim", "what u need here lol?", function()
+Section:NewButton("AntiAim", "Activate AntiAim", function()
     local Players = game:GetService("Players")
     local player = Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
