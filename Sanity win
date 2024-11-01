@@ -1,12 +1,12 @@
 print("hello, it's my first script, this script may have some issues, I'm sorry. If the script doesn't work, try to download Visual Studio Code.")
 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Robojini/Tuturial_UI_Library/main/UI_Template_1"))()
-local Window = Library.CreateLib("sanity.win v1.1", "RJTheme3")
+local Window = Library.CreateLib("sanity.win v1.2", "RJTheme3")
 
 local Tab = Window:NewTab("Visual")
 local Section = Tab:NewSection("ESP")
 
-Section:NewButton("ESP Button", "I know this ESP is not perfect", function()
+Section:NewButton("ESP Button", "I know this ESP is shit", function()
     local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
     local LocalPlayer = Players.LocalPlayer
@@ -151,23 +151,30 @@ end)
 
 local Section = Tab:NewSection("Teleport")
 
-Section:NewButton("Ctrl+Click to Teleport", "Use Ctrl + Click to teleport", function()
-    local UIS = game:GetService("User InputService")
-    local Player = game.Players.LocalPlayer
-    local Mouse = Player:GetMouse()
+Section:NewButton("Ctrl+Click=tp", "sanity.win=win!", function()
+    local UIS = game:GetService("UserInputService")
 
-    function Teleport(pos)
-        local Char = Player.Character
-        if Char then
-            Char:MoveTo(pos)
-        end
-    end
+local Player = game.Players.LocalPlayer
+local Mouse = Player:GetMouse()
 
-    UIS.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 and UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
-            Teleport(Mouse.Hit.p)
-        end
-    end)
+
+function GetCharacter()
+   return game.Players.LocalPlayer.Character
+end
+
+function Teleport(pos)
+   local Char = GetCharacter()
+   if Char then
+       Char:MoveTo(pos)
+   end
+end
+
+
+UIS.InputBegan:Connect(function(input)
+   if input.UserInputType == Enum.UserInputType.MouseButton1 and UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
+       Teleport(Mouse.Hit.p)
+   end
+end)
 end)
 
 local Section = Tab:NewSection("Fly")
@@ -197,3 +204,11 @@ Section:NewButton("AntiAim", "Activate AntiAim", function()
 
     rotateCharacter()
 end)
+
+local Tab = Window:NewTab("Credits")
+
+local Section = Tab:NewSection("Credits to yanelegit/lumefch")
+local Section = Tab:NewSection("No testers yet")
+local Section = Tab:NewSection("Script is open source, do not trust to fake versions")
+
+local Tab = Window:NewTab("Fun")
